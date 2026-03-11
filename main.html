@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>树德中学（宁夏街校区）2024级12班</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <div class="bg-white rounded-2xl shadow-sm p-8 mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">树德中学（宁夏街校区）2024级12班 班牌投稿</h1>
+            <p class="text-gray-500">请在此段落添加文本</p>
+            
+            <div class="mt-6 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 rounded-xl p-6 bg-blue-50">
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">选择照片投稿</button>
+                <p id="status" class="mt-3 text-sm text-gray-600">支持 JPG/PNG，图片会自动公开</p>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold mb-4 text-gray-700">最新投稿</h2>
+        <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            </div>
+    </div>
+
+    <script>
+        // 1. 这里替换成你的 Supabase 配置
+        const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co/';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const gallery = document.getElementById('gallery');
+
+        // 2. 上传逻辑
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            status.innerText = "正在上传中...";
+            
+            // 生成随机文件名，防止同名冲突
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+
+            const { data, error } = await supabase.storage
+                .from('photos')
+                .upload(fileName, file);
+
+            if (error) {
+                status.innerText = "上传失败: " + error.message;
+            } else {
+                status.innerText = "投稿成功！刷新中...";
+                setTimeout(loadImages, 1000); // 1秒后刷新列表
+            }
+        };
+
+        // 3. 加载图片列表逻辑
+        async function loadImages() {
+            const { data, error } = await supabase.storage.from('photos').list('', {
+                limit: 100,
+                sortBy: { column: 'created_at', order: 'desc' }
+            });
+
+            if (error) return;
+
+            gallery.innerHTML = ''; // 清空当前视图
+            data.forEach(item => {
+                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(item.name);
+                
+                const div = document.createElement('div');
+                div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm";
+                div.innerHTML = `<img src="${publicUrl}" class="w-full h-full object-cover hover:scale-110 transition duration-500 cursor-pointer" onclick="window.open('${publicUrl}')">`;
+                gallery.appendChild(div);
+            });
+        }
+
+        // 初始化加载
+        loadImages();
+    </script>
+</body>
+</html>
