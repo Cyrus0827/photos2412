@@ -26,56 +26,57 @@
     </div>
 
     <script>
-        // 1. 这里替换成你的 Supabase 配置
-        const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co/';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 1. 把这里的 const supabase 改成 const supabaseClient
+// 并且把后面的 supabase.createClient 改成 window.supabase.createClient
+const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const fileInput = document.getElementById('fileInput');
-        const status = document.getElementById('status');
-        const gallery = document.getElementById('gallery');
+// 2. 注意！下面所有的 supabase 都要改成 supabaseClient
+const fileInput = document.getElementById('fileInput');
+const status = document.getElementById('status');
+const gallery = document.getElementById('gallery');
 
-        // 2. 上传逻辑
-        fileInput.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+fileInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-            status.innerText = "正在上传中...";
-            
-            // 生成随机文件名，防止同名冲突
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+    status.innerText = "正在上传中...";
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
 
-            const { data, error } = await supabase.storage
-                .from('photos')
-                .upload(fileName, file);
+    // 这里改名
+    const { data, error } = await supabaseClient.storage
+        .from('photos')
+        .upload(fileName, file);
 
-            if (error) {
-                status.innerText = "上传失败: " + error.message;
-            } else {
-                status.innerText = "投稿成功！刷新中...";
-                setTimeout(loadImages, 1000); // 1秒后刷新列表
-            }
-        };
+    if (error) {
+        status.innerText = "上传失败: " + error.message;
+    } else {
+        status.innerText = "投稿成功！";
+        loadImages(); 
+    }
+};
 
-        // 3. 加载图片列表逻辑
-        async function loadImages() {
-            const { data, error } = await supabase.storage.from('photos').list('', {
-                limit: 100,
-                sortBy: { column: 'created_at', order: 'desc' }
-            });
+async function loadImages() {
+    // 这里也要改名
+    const { data, error } = await supabaseClient.storage.from('photos').list('', {
+        limit: 100,
+        sortBy: { column: 'created_at', order: 'desc' }
+    });
 
-            if (error) return;
+    if (error) return;
 
-            gallery.innerHTML = ''; // 清空当前视图
-            data.forEach(item => {
-                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(item.name);
-                
-                const div = document.createElement('div');
-                div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm";
-                div.innerHTML = `<img src="${publicUrl}" class="w-full h-full object-cover hover:scale-110 transition duration-500 cursor-pointer" onclick="window.open('${publicUrl}')">`;
-                gallery.appendChild(div);
-            });
-        }
+    gallery.innerHTML = ''; 
+    data.forEach(item => {
+        // 这里也要改名
+        const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(item.name);
+        
+        const div = document.createElement('div');
+        div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm";
+        div.innerHTML = `<img src="${publicUrl}" class="w-full h-full object-cover">`;
+        gallery.appendChild(div);
+    });
+}
 
         // 初始化加载
         loadImages();
