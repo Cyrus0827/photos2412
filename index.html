@@ -8,10 +8,9 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
-    /* 1. 基础风格：回归纯粹的黑白灰，去除所有圆角和阴影 */
     body {
-        background-color: #ffffff; /* 纯白背景 */
-        color: #000000;            /* 纯黑文字 */
+        background-color: #ffffff;
+        color: #000000;            
         font-family: "PingFang SC", "STHeiti", "Microsoft YaHei", sans-serif;
         margin: 0;
         padding: 20px;
@@ -23,13 +22,12 @@
         margin: 0 auto;
     }
 
-    /* 2. 头部：朴素的文字排版 */
     h1 {
         font-size: 1.5rem !important;
         font-weight: 700;
         letter-spacing: -0.5px;
         margin-bottom: 0.5rem;
-        text-align: center !important; /* 改为左对齐 */
+        text-align: center !important; 
     }
 
     p {
@@ -38,7 +36,6 @@
         margin-bottom: 2rem;
     }
 
-    /* 3. 上传区域：黑框按钮风格 */
     .bg-blue-50, .bg-white.rounded-2xl {
         background: none !important;
         border: none !important;
@@ -48,9 +45,9 @@
     }
 
     button, .bg-blue-600 {
-        background-color: #000000 !important; /* 纯黑按钮 */
+        background-color: #000000 !important;
         color: #ffffff !important;
-        border-radius: 0px !important;        /* 去除圆角 */
+        border-radius: 0px !important;       
         padding: 10px 24px !important;
         font-size: 0.875rem !important;
         font-weight: 500;
@@ -70,7 +67,6 @@
         margin-left: 10px;
     }
 
-    /* 4. 图片墙：紧凑平铺 */
     h2 {
         font-size: 0.75rem !important;
         text-transform: uppercase;
@@ -85,28 +81,60 @@
     #gallery, .grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-        gap: 4px !important; /* 极小间距，像照片墙 */
+        gap: 4px !important; 
     }
 
-    /* 图片项：保持直角 */
     .aspect-square, .img-item {
         border-radius: 0px !important; 
         background-color: #f5f5f5 !important;
         overflow: hidden;
-        border: 1px solid #eee; /* 给白底图片加个微弱边框 */
+        border: 1px solid #eee;
     }
 
     img {
         border-radius: 0px !important;
-        filter: grayscale(100%); /* 默认黑白，极其朴素 */
+        filter: grayscale(100%);
         transition: filter 0.4s ease;
     }
 
     img:hover {
-        filter: grayscale(0%); /* 鼠标悬停变彩色 */
+        filter: grayscale(0%);
     }
 
-    /* 针对移动端的优化 */
+    .upload-container {
+    margin-top: 30px;
+    border: 1px dashed #ccc; 
+    padding: 40px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.upload-container.drag-over {
+    border-color: #000;
+    background-color: #f9f9f9;
+}
+
+.upload-container p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.upload-link {
+    color: #000;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+#status {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #999;
+}
+
+    /*移动端优化*/
     @media (max-width: 640px) {
         #gallery {
             grid-template-columns: repeat(3, 1fr) !important;
@@ -119,81 +147,120 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <div class="bg-white rounded-2xl shadow-sm p-8 mb-8 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">树德中学（宁夏街校区）2024级12班 班牌投稿</h1>
-            
-            
-            <div class="mt-6 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 rounded-xl p-6 bg-blue-50">
-                <input type="file" id="fileInput" accept="image/*" class="hidden">
-                <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">选择照片投稿</button>
-                <p id="status" class="mt-3 text-sm text-gray-600">支持 JPG/PNG，图片会自动公开</p>
-            </div>
-        </div>
+        <div class="header">
+    <h1>树德中学 (宁夏街) 12班 班牌投稿</h1>
+    
+    <div id="dropZone" class="upload-container">
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <p>将照片拖到这里，或 <span class="upload-link" onclick="document.getElementById('fileInput').click()">点击上传</span></p>
+        <span id="status">等待操作...</span>
+    </div>
+</div>
 
         <h2 class="text-xl font-bold mb-4 text-gray-700">最新投稿</h2>
+        
         <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 gap-4">
             </div>
     </div>
 
-    <script>
-const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+    const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
+    
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const fileInput = document.getElementById('fileInput');
-const status = document.getElementById('status');
-const gallery = document.getElementById('gallery');
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const status = document.getElementById('status');
+    const gallery = document.getElementById('gallery');
 
-fileInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    async function handleFileUpload(file) {
+        if (!file) return;
 
-    status.innerText = "正在上传中...";
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+        if (!file.type.startsWith('image/')) {
+            status.innerText = "错误：只能上传图片文件";
+            return;
+        }
 
-    const { data, error } = await supabaseClient.storage
-        .from('photos')
-        .upload(fileName, file);
+        status.innerText = "正在上传：" + file.name + "...";
 
-    if (error) {
-        status.innerText = "上传失败: " + error.message;
-    } else {
-        status.innerText = "投稿成功！";
-        loadImages(); 
-    }
-};
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-async function loadImages() {
-    const { data, error } = await supabaseClient.storage.from('photos').list('', {
-        limit: 100,
-        sortBy: { column: 'created_at', order: 'desc' }
-    });
+        const { data, error } = await supabaseClient.storage
+            .from('photos')
+            .upload(fileName, file);
 
-    if (error) {
-        console.error("加载列表失败:", error);
-        return;
+        if (error) {
+            console.error("上传失败:", error);
+            status.innerText = "失败：" + error.message;
+        } else {
+            status.innerText = "上传成功";
+            setTimeout(loadImages, 800);
+        }
     }
 
-    gallery.innerHTML = ''; 
-
-    data.forEach(item => {
-        if (item.name === '.emptyFolderPlaceholder') return;
-
-        const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(item.name);
-        
-        const div = document.createElement('div');
-        div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm relative group";
-        
-        div.innerHTML = `
-            <img src="${publicUrl}" 
-                 class="w-full h-full object-cover hover:scale-110 transition duration-500 cursor-pointer" 
-                 onclick="window.open('${publicUrl}')"
-                 onerror="this.parentElement.style.display='none'"> 
-        `;
-        gallery.appendChild(div);
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
     });
-}
-        loadImages();
-    </script>
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+    });
+
+    dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileUpload(files[0]);
+        }
+    });
+
+    fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) {
+            handleFileUpload(e.target.files[0]);
+        }
+    };
+
+    async function loadImages() {
+        const { data, error } = await supabaseClient.storage.from('photos').list('', {
+            limit: 100,
+            sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+        if (error) {
+            console.error("加载列表失败:", error);
+            return;
+        }
+
+        gallery.innerHTML = ''; 
+
+        data.forEach(item => {
+            if (item.name.startsWith('.')) return;
+
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('photos')
+                .getPublicUrl(item.name);
+            
+            const div = document.createElement('div');
+            div.className = "img-item";
+            
+            div.innerHTML = `
+                <img src="${publicUrl}" 
+                     loading="lazy" 
+                     onclick="window.open('${publicUrl}')"
+                     onerror="this.parentElement.remove()">
+            `;
+            gallery.appendChild(div);
+        });
+    }
+    loadImages();
+</script>
 </body>
 </html>
