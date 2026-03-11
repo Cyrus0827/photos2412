@@ -26,13 +26,10 @@
     </div>
 
     <script>
-        // 1. 把这里的 const supabase 改成 const supabaseClient
-// 并且把后面的 supabase.createClient 改成 window.supabase.createClient
 const SUPABASE_URL = 'https://kjzehxyylnmbfoepvosu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqemVoeHl5bG5tYmZvZXB2b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzIzMDcsImV4cCI6MjA4ODgwODMwN30.J1UxjETFY0rxPbMTPj8xC14oaE2Gdc-kADWE8XVcV88';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. 注意！下面所有的 supabase 都要改成 supabaseClient
 const fileInput = document.getElementById('fileInput');
 const status = document.getElementById('status');
 const gallery = document.getElementById('gallery');
@@ -44,7 +41,6 @@ fileInput.onchange = async (e) => {
     status.innerText = "正在上传中...";
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
 
-    // 这里改名
     const { data, error } = await supabaseClient.storage
         .from('photos')
         .upload(fileName, file);
@@ -58,27 +54,35 @@ fileInput.onchange = async (e) => {
 };
 
 async function loadImages() {
-    // 这里也要改名
     const { data, error } = await supabaseClient.storage.from('photos').list('', {
         limit: 100,
         sortBy: { column: 'created_at', order: 'desc' }
     });
 
-    if (error) return;
+    if (error) {
+        console.error("加载列表失败:", error);
+        return;
+    }
 
     gallery.innerHTML = ''; 
+
     data.forEach(item => {
-        // 这里也要改名
+        if (item.name === '.emptyFolderPlaceholder') return;
+
         const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(item.name);
         
         const div = document.createElement('div');
-        div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm";
-        div.innerHTML = `<img src="${publicUrl}" class="w-full h-full object-cover">`;
+        div.className = "aspect-square overflow-hidden rounded-lg bg-gray-200 shadow-sm relative group";
+        
+        div.innerHTML = `
+            <img src="${publicUrl}" 
+                 class="w-full h-full object-cover hover:scale-110 transition duration-500 cursor-pointer" 
+                 onclick="window.open('${publicUrl}')"
+                 onerror="this.parentElement.style.display='none'"> 
+        `;
         gallery.appendChild(div);
     });
 }
-
-        // 初始化加载
         loadImages();
     </script>
 </body>
