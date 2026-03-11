@@ -242,23 +242,28 @@
         gallery.innerHTML = ''; 
 
         data.forEach(item => {
-            if (item.name.startsWith('.')) return;
+    if (item.name.startsWith('.')) return;
 
-            const { data: { publicUrl } } = supabaseClient.storage
-                .from('photos')
-                .getPublicUrl(item.name);
-            
-            const div = document.createElement('div');
-            div.className = "img-item";
-            
-            div.innerHTML = `
-                <img src="${publicUrl}" 
-                     loading="lazy" 
-                     onclick="window.open('${publicUrl}')"
-                     onerror="this.parentElement.remove()">
-            `;
-            gallery.appendChild(div);
-        });
+    const { data: { publicUrl: originalUrl } } = supabaseClient.storage
+        .from('photos')
+        .getPublicUrl(item.name);
+
+    // 缩略图链接
+    const thumbUrl = `${originalUrl}?width=300&height=300&resize=cover&quality=70`;
+    
+    const div = document.createElement('div');
+    div.className = "img-item"; 
+    
+    div.innerHTML = `
+        <img src="${thumbUrl}" 
+             data-full="${originalUrl}" 
+             loading="lazy" 
+             style="cursor: zoom-in;"
+             onclick="window.open(this.dataset.full)"
+             onerror="this.parentElement.remove()">
+    `;
+    gallery.appendChild(div);
+});
     }
     loadImages();
 </script>
